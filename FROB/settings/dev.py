@@ -1,8 +1,5 @@
 from datetime import timedelta
 
-from django.conf.global_settings import SECRET_KEY
-
-from FROB import settings
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
