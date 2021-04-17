@@ -6,7 +6,6 @@ from django.contrib.auth.models import (BaseUserManager, AbstractBaseUser, Permi
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from FROB.constant_values import otp_validity_minutes
-from FROB.settings.base import SECRET_KEY
 
 OTP_TYPE_CHOICES = (("register", "Register"),
                     ("login", "Login"),
@@ -89,14 +88,14 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
             'access': str(refresh.access_token),
         }
         return token
-
-    def _generate_jwt_token(self):
-        dt = datetime.datetime.now() + datetime.timedelta(days=60)
-        token = jwt.encode({
-            'id': self.pk,
-            'exp': int(dt.strftime('%s'))
-        }, SECRET_KEY, algorithm='HS256')
-        return token.decode('utf-8')
+    #
+    # def _generate_jwt_token(self):
+    #     dt = datetime.datetime.now() + datetime.timedelta(days=60)
+    #     token = jwt.encode({
+    #         'id': self.pk,
+    #         'exp': int(dt.strftime('%s'))
+    #     }, SECRET_KEY, algorithm='HS256')
+    #     return token.decode('utf-8')
 
 
 class BlockedTokens(models.Model):
