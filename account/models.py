@@ -55,11 +55,17 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     is_mobile_verified = models.BooleanField(default=False)
     email = models.EmailField(blank=True, null=True)
     is_email_verified = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     signup_timestamp = models.DateTimeField(auto_now_add=True)
     secret_key = models.UUIDField(default=uuid.uuid4)
+
+    created_timestamp = models.DateTimeField(auto_now_add=True)
+    updated_timestamp = models.DateTimeField(auto_now=True)
+    deleted_timestamp = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
+    ip = models.GenericIPAddressField(null=True, blank=True)
 
     USERNAME_FIELD = 'id'
     REQUIRED_FIELDS = []
@@ -75,10 +81,6 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     class Meta:
         db_table = 'user_account'
         managed = True
-
-    @property
-    def token(self):
-        return self._generate_jwt_token()
 
     @staticmethod
     def generate_token(user):
@@ -116,8 +118,8 @@ class LoginTracks(models.Model):
     created_timestamp = models.DateTimeField(auto_now_add=True)
     updated_timestamp = models.DateTimeField(auto_now=True)
     deleted_timestamp = models.DateTimeField(auto_now=True)
-    is_deleted = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
     ip = models.GenericIPAddressField(null=True, blank=True)
 
     class Meta:
