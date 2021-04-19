@@ -135,7 +135,7 @@ REST_FRAMEWORK = {
 
 AUTH_USER_MODEL = 'account.UserAccount'
 
-server_type = os.environ.get("FROB_server_type")
+server_type = os.getenv("FROB_server_type")
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=600),
@@ -165,8 +165,8 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 #
-AWS_ACCESS_KEY_ID = os.environ['frob_aws_access_key']
-AWS_SECRET_ACCESS_KEY = os.environ['frob_aws_secret_key']
+AWS_ACCESS_KEY_ID = os.getenv('frob_aws_access_key')
+AWS_SECRET_ACCESS_KEY = os.getenv('frob_aws_secret_key')
 
 AWS_STORAGE_BUCKET_NAME = 'frob'
 AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
@@ -184,3 +184,5 @@ MEDIAFILES_LOCATION = 'media'
 
 AWS_BOOK_CLUB_MEDIA_LOCATION = 'book_club'
 AWS_USER_PROFILE_MEDIA_LOCATION = 'user_profile'
+
+print("============================================", os.getenv('frob_aws_access_key'))
