@@ -1,6 +1,8 @@
 import datetime
 import uuid
 import jwt
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.contrib.auth.models import (BaseUserManager, AbstractBaseUser, PermissionsMixin)
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -47,8 +49,7 @@ class UserManager(BaseUserManager):
 
 
 class UserAccount(AbstractBaseUser, PermissionsMixin):
-    id = models.CharField(primary_key=True, editable=True, default=uuid.uuid4, blank=False, unique=True,
-                          max_length=500, name=("id"), verbose_name=("ID"))
+    id = models.CharField(primary_key=True, editable=True, default=uuid.uuid4, unique=True, max_length=500, name="id")
     first_name = models.CharField(max_length=255, blank=True, null=True)
     last_name = models.CharField(max_length=255, blank=True, null=True)
     mobile = models.CharField(max_length=11, blank=True, null=True, unique=True)
@@ -58,7 +59,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     is_superuser = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     signup_timestamp = models.DateTimeField(auto_now_add=True)
-    secret_key = models.UUIDField(default=uuid.uuid4)
+    secret_key = models.UUIDField(default=uuid.uuid4, editable=False)
 
     created_timestamp = models.DateTimeField(auto_now_add=True)
     updated_timestamp = models.DateTimeField(auto_now=True)
@@ -90,17 +91,9 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
             'access': str(refresh.access_token),
         }
         return token
-    #
-    # def _generate_jwt_token(self):
-    #     dt = datetime.datetime.now() + datetime.timedelta(days=60)
-    #     token = jwt.encode({
-    #         'id': self.pk,
-    #         'exp': int(dt.strftime('%s'))
-    #     }, SECRET_KEY, algorithm='HS256')
-    #     return token.decode('utf-8')
 
 
-class BlockedTokens(models.Model):
+class BlockedToken(models.Model):
     id = models.AutoField(primary_key=True)
     token = models.CharField(max_length=500)
     user = models.ForeignKey(UserAccount, related_name="token_user", on_delete=models.CASCADE)
@@ -112,7 +105,7 @@ class BlockedTokens(models.Model):
         managed = True
 
 
-class LoginTracks(models.Model):
+class LoginTrack(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(UserAccount, related_name="login_track_user", on_delete=models.CASCADE)
     created_timestamp = models.DateTimeField(auto_now_add=True)
@@ -141,3 +134,23 @@ class Otp(models.Model):
     class Meta:
         managed = True
         db_table = 'otp'
+
+
+class UserHistory(models.Model):
+    id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=False)
+    content_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'content_id')
+    user = models.ForeignKey(UserAccount, related_name="user_history_user", on_delete=models.CASCADE)
+
+    created_user = models.ForeignKey(UserAccount, on_delete=models.CASCADE, related_name="user_history_created_user")
+    created_timestamp = models.DateTimeField(auto_now_add=True)
+    updated_timestamp = models.DateTimeField(auto_now=True)
+    deleted_timestamp = models.DateTimeField(blank=True, null=True)
+    is_deleted = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    ip = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'user_history'
+        managed = True
