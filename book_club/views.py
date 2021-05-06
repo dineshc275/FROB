@@ -22,6 +22,7 @@ class BookClubAPIView(APIView):
 
     def post(self, request):
         try:
+            source_type = request.query_params["source_type"]
             key_user = request.data.get('key_user', None)
             if key_user:
                 try:
@@ -48,9 +49,11 @@ class BookClubAPIView(APIView):
             if image_list:
                 BookClubMedia.objects.create(image=image_list[0], book_club=book_club_obj)
 
-            return Response({"data": {"is_created": True, "data": BookClubSerializer(book_club_obj).data}}, status=status.HTTP_200_OK)
+            serializer_data = BookClubSerializer(book_club_obj).data
+
+            return Response({"is_success": True, "data": serializer_data}, status=status.HTTP_200_OK)
         except CustomMessage as e:
-            return Response({"data": {"is_created": False, "message": e.message}}, status=status.HTTP_200_OK)
+            return Response({"data": {"is_success": False, "message": e.message}}, status=status.HTTP_200_OK)
         except (ParseError, ZeroDivisionError, MultiValueDictKeyError, KeyError, ValueError, ValidationError,
                 ObjectDoesNotExist):
             logger.info(f"class name: {self.__class__.__name__},request: {request.data}")

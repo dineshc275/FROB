@@ -25,5 +25,6 @@ urlpatterns = [
     path('account/', include('account.urls')),
     path('', include('static_pages.urls')),
     path('bookclub/', include('book_club.urls')),
+    path('app/', include('app_data.urls')),
 
 ]

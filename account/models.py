@@ -5,9 +5,11 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.contrib.auth.models import (BaseUserManager, AbstractBaseUser, PermissionsMixin)
+from django.utils import timezone
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from FROB.constant_values import otp_validity_minutes
+from FROB.custom_storages import UserProfileMediaStorage
 
 OTP_TYPE_CHOICES = (("register", "Register"),
                     ("login", "Login"),
@@ -32,14 +34,14 @@ class UserManager(BaseUserManager):
         user.save()
         return user
 
-    def create_social_user(self, user_id, first_name, email=None):
-        user = self.model(user_id=user_id, first_name=first_name, email=email)
+    def create_social_user(self, id, first_name, email=None):
+        user = self.model(id=id, first_name=first_name, email=email)
         user.is_active = True
         user.save()
         return user
 
-    def create_superuser(self, password, mobile, first_name=None, user_id=None):
-        user = self.model(first_name=first_name, mobile=mobile, user_id=user_id)
+    def create_superuser(self, id, password, mobile=None, first_name=None):
+        user = self.model(id=id, first_name=first_name, mobile=mobile)
         user.set_password(password)
         user.is_superuser = True
         user.is_staff = True
@@ -60,6 +62,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     signup_timestamp = models.DateTimeField(auto_now_add=True)
     secret_key = models.UUIDField(default=uuid.uuid4, editable=False)
+    media = models.FileField(storage=UserProfileMediaStorage(), null=True, blank=True)
 
     created_timestamp = models.DateTimeField(auto_now_add=True)
     updated_timestamp = models.DateTimeField(auto_now=True)
@@ -127,7 +130,7 @@ class Otp(models.Model):
     otp_type = models.CharField(choices=OTP_TYPE_CHOICES, default="register", max_length=50)
     created_timestamp = models.DateTimeField(auto_now_add=True)
     expiry_timestamp = models.DateTimeField(
-        default=datetime.datetime.now() + datetime.timedelta(minutes=otp_validity_minutes))
+        default=timezone.now() + datetime.timedelta(minutes=otp_validity_minutes))
     otp = models.IntegerField(blank=True, null=True)
     attempts = models.PositiveIntegerField(default=0)
 

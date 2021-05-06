@@ -29,8 +29,8 @@ class EventMediaStorage(S3Boto3Storage):
     custom_domain = f'{settings.AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
 
 
-class BookClubTalkMediaStorage(S3Boto3Storage):
-    location = settings.AWS_BOOK_CLUB_TALK_MEDIA_LOCATION
+class BookTalkMediaStorage(S3Boto3Storage):
+    location = settings.AWS_BOOK_TALK_MEDIA_LOCATION
     file_overwrite = False
     custom_domain = f'{settings.AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
 
@@ -45,7 +45,7 @@ class UserProfileMediaStorage(S3Boto3Storage):
     location = settings.AWS_USER_PROFILE_MEDIA_LOCATION
     file_overwrite = False
     custom_domain = f'{settings.AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-    default_acl = 'public'
+    # default_acl = 'public'
 
 
 class BannerMediaStorage(S3Boto3Storage):
