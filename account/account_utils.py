@@ -3,6 +3,9 @@ import json
 import random
 from django.db.models import Q
 import http.client
+
+from django.utils import timezone
+
 from FROB.constant_values import otp_attempts
 from account.models import Otp
 
@@ -33,7 +36,7 @@ def msg91_otp_service(mobile, otp, mode):
 def send_mobile_otp(mobile, mode):
     try:
         otp_obj1 = Otp.objects.filter(Q(input=mobile) & Q(otp_type=mode)
-                                      & Q(expiry_timestamp__gte=datetime.datetime.now())).latest('created_timestamp')
+                                      & Q(expiry_timestamp__gte=timezone.now())).latest('created_timestamp')
         if otp_obj1.attempts >= otp_attempts:
             # otp = random.randint(100001, 999999)
             otp = "123123"
@@ -49,7 +52,7 @@ def send_mobile_otp(mobile, mode):
 def mobile_otp_verify(mobile, otp, mode):
     try:
         otp_obj1 = Otp.objects.filter(Q(input=mobile) & Q(otp_type=mode)
-                                      & Q(expiry_timestamp__gte=datetime.datetime.now())).latest('created_timestamp')
+                                      & Q(expiry_timestamp__gte=timezone.now())).latest('created_timestamp')
         if otp_obj1.attempts == otp_attempts:
             return {"status": False, "message": "You tried many times, Generate a new OTP"}
     except Otp.DoesNotExist:

@@ -1,11 +1,15 @@
 import datetime
 import uuid
 import jwt
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.contrib.auth.models import (BaseUserManager, AbstractBaseUser, PermissionsMixin)
+from django.utils import timezone
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from FROB.constant_values import otp_validity_minutes
+from FROB.custom_storages import UserProfileMediaStorage
 
 OTP_TYPE_CHOICES = (("register", "Register"),
                     ("login", "Login"),
@@ -30,14 +34,14 @@ class UserManager(BaseUserManager):
         user.save()
         return user
 
-    def create_social_user(self, user_id, first_name, email=None):
-        user = self.model(user_id=user_id, first_name=first_name, email=email)
+    def create_social_user(self, id, first_name, email=None):
+        user = self.model(id=id, first_name=first_name, email=email)
         user.is_active = True
         user.save()
         return user
 
-    def create_superuser(self, password, mobile, first_name=None, user_id=None):
-        user = self.model(first_name=first_name, mobile=mobile, user_id=user_id)
+    def create_superuser(self, id, password, mobile=None, first_name=None):
+        user = self.model(id=id, first_name=first_name, mobile=mobile)
         user.set_password(password)
         user.is_superuser = True
         user.is_staff = True
@@ -47,8 +51,7 @@ class UserManager(BaseUserManager):
 
 
 class UserAccount(AbstractBaseUser, PermissionsMixin):
-    id = models.CharField(primary_key=True, editable=True, default=uuid.uuid4, blank=False, unique=True,
-                          max_length=500, name=("id"), verbose_name=("ID"))
+    id = models.CharField(primary_key=True, editable=True, default=uuid.uuid4, unique=True, max_length=500, name="id")
     first_name = models.CharField(max_length=255, blank=True, null=True)
     last_name = models.CharField(max_length=255, blank=True, null=True)
     mobile = models.CharField(max_length=11, blank=True, null=True, unique=True)
@@ -58,7 +61,8 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     is_superuser = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     signup_timestamp = models.DateTimeField(auto_now_add=True)
-    secret_key = models.UUIDField(default=uuid.uuid4)
+    secret_key = models.UUIDField(default=uuid.uuid4, editable=False)
+    media = models.FileField(storage=UserProfileMediaStorage(), null=True, blank=True)
 
     created_timestamp = models.DateTimeField(auto_now_add=True)
     updated_timestamp = models.DateTimeField(auto_now=True)
@@ -90,17 +94,9 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
             'access': str(refresh.access_token),
         }
         return token
-    #
-    # def _generate_jwt_token(self):
-    #     dt = datetime.datetime.now() + datetime.timedelta(days=60)
-    #     token = jwt.encode({
-    #         'id': self.pk,
-    #         'exp': int(dt.strftime('%s'))
-    #     }, SECRET_KEY, algorithm='HS256')
-    #     return token.decode('utf-8')
 
 
-class BlockedTokens(models.Model):
+class BlockedToken(models.Model):
     id = models.AutoField(primary_key=True)
     token = models.CharField(max_length=500)
     user = models.ForeignKey(UserAccount, related_name="token_user", on_delete=models.CASCADE)
@@ -112,7 +108,7 @@ class BlockedTokens(models.Model):
         managed = True
 
 
-class LoginTracks(models.Model):
+class LoginTrack(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(UserAccount, related_name="login_track_user", on_delete=models.CASCADE)
     created_timestamp = models.DateTimeField(auto_now_add=True)
@@ -134,10 +130,30 @@ class Otp(models.Model):
     otp_type = models.CharField(choices=OTP_TYPE_CHOICES, default="register", max_length=50)
     created_timestamp = models.DateTimeField(auto_now_add=True)
     expiry_timestamp = models.DateTimeField(
-        default=datetime.datetime.now() + datetime.timedelta(minutes=otp_validity_minutes))
+        default=timezone.now() + datetime.timedelta(minutes=otp_validity_minutes))
     otp = models.IntegerField(blank=True, null=True)
     attempts = models.PositiveIntegerField(default=0)
 
     class Meta:
         managed = True
         db_table = 'otp'
+
+
+class UserHistory(models.Model):
+    id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=False)
+    content_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'content_id')
+    user = models.ForeignKey(UserAccount, related_name="user_history_user", on_delete=models.CASCADE)
+
+    created_user = models.ForeignKey(UserAccount, on_delete=models.CASCADE, related_name="user_history_created_user")
+    created_timestamp = models.DateTimeField(auto_now_add=True)
+    updated_timestamp = models.DateTimeField(auto_now=True)
+    deleted_timestamp = models.DateTimeField(blank=True, null=True)
+    is_deleted = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    ip = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'user_history'
+        managed = True

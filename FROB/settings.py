@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'account',
     'static_pages',
     'book_club',
+    'book',
+    'app_data',
 
     # packages
     'rest_framework',
@@ -130,7 +132,8 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
-    ]
+    ],
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning'
 }
 
 AUTH_USER_MODEL = 'account.UserAccount'
@@ -184,5 +187,9 @@ MEDIAFILES_LOCATION = 'media'
 
 AWS_BOOK_CLUB_MEDIA_LOCATION = 'book_club'
 AWS_USER_PROFILE_MEDIA_LOCATION = 'user_profile'
+AWS_EVENT_USER_MEDIA_LOCATION = 'book_club_event_user'
+AWS_EVENT_MEDIA_LOCATION = 'book_club_event'
+AWS_BOOK_TALK_MEDIA_LOCATION = 'book_talk'
+AWS_BOOK_MEDIA_LOCATION = 'book'
+AWS_BANNER_MEDIA_LOCATION = 'banner'
 
-print("============================================", os.getenv('frob_aws_access_key'))

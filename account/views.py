@@ -41,10 +41,10 @@ class GenerateOtp(APIView):
                     raise CustomMessage("Mobile Number is not Registered")
                 else:
                     send_mobile_otp(mobile, mode=otp_type)
-            return Response({"data": {"is_otp_sent": True, "user_input": mobile, "user_message": "OTP Sent to your Mobile"}},
+            return Response({"is_success": True, "data": {"user_input": mobile, "user_message": "OTP Sent to your Mobile"}},
                             status=status.HTTP_200_OK)
         except CustomMessage as e:
-            return Response({"data": {"is_otp_sent": False, "user_input": mobile, "user_message": e.message}},
+            return Response({"is_success": False, "data": {"user_input": mobile, "user_message": e.message}},
                             status=status.HTTP_200_OK)
         except (ParseError, ZeroDivisionError, MultiValueDictKeyError, KeyError, ValueError, ValidationError):
             logger.debug(f"class name: {self.__class__.__name__},request: {request.data}")
@@ -88,7 +88,7 @@ class VerifyOtp(APIView):
 
                 token = user_obj.generate_token(user_obj)
 
-                return Response({"data": {"is_otp_verified": True, "user_input": mobile, "message": "Success",
+                return Response({"data": {"is_otp_verified": True, "user_input": user_input, "message": "Success",
                                           "token": token, "user_detail": UserAccountSerializer(request.user, many=False).data}},
                                 status=status.HTTP_200_OK)
             else:
@@ -98,10 +98,10 @@ class VerifyOtp(APIView):
                     raise CustomMessage("Both Passwords didn't match")
                 user_obj.set_password(password1)
                 user_obj.save()
-                return Response({"data": {"is_otp_verified": True, "user_input": mobile,
+                return Response({"is_success": True, "data": {"is_otp_verified": True, "user_input": mobile,
                                           "message": "Password Updated Successfully",}}, status=status.HTTP_200_OK)
         except CustomMessage as e:
-            return Response({"data": {"is_otp_verified": False, "user_input": mobile, "message": e.message}},
+            return Response({"data": {"is_success": False, "user_input": mobile, "message": e.message}},
                             status=status.HTTP_200_OK)
         except (ParseError, ZeroDivisionError, MultiValueDictKeyError, KeyError, ValueError, ValidationError):
             logger.debug(f"class name: {self.__class__.__name__},request: {request.data}")
@@ -125,13 +125,13 @@ class Login(APIView):
             user = authenticate(username=user_obj.id, password=password)
             if user is not None:
                 token = user_obj.generate_token(user_obj)
-                return Response({"data": {"is_credentials_match": True, "user_input": user_input, "message": "Success",
+                return Response({"is_success": True, "data": {"user_input": user_input, "message": "Success",
                                 "token": token, "user_detail": UserAccountSerializer(user_obj, many=False).data}},
                                 status=status.HTTP_200_OK)
             else:
                 raise CustomMessage("Credentials Didn't Match")
         except CustomMessage as e:
-            return Response({"data": {"is_credentials_match": False, "user_input": user_input, "message": e.message}},
+            return Response({"is_success": False, "data": {"user_input": user_input, "message": e.message}},
                             status=status.HTTP_200_OK)
         except (ParseError, ZeroDivisionError, MultiValueDictKeyError, KeyError, ValueError, ValidationError):
             logger.debug(f"class name: {self.__class__.__name__},request: {request.data}")
@@ -161,10 +161,10 @@ class UpdateDetail(APIView):
             if password:
                 request.user.set_password(password)
             request.user.save()
-            return Response({"data": {"is_updated": True, "user_input": request.user.mobile,
+            return Response({"is_success": True, "data": {"user_input": request.user.mobile,
                                       "message": "Successfully Updated", "user_detail": UserAccountSerializer(request.user, many=False).data}}, status=status.HTTP_200_OK)
         except CustomMessage as e:
-            return Response({"data": {"is_updated": False, "user_input": request.user.mobile, "message": e.message}},
+            return Response({"is_success": False, "data": {"user_input": request.user.mobile, "message": e.message}},
                             status=status.HTTP_200_OK)
         except (ParseError, ZeroDivisionError, MultiValueDictKeyError, KeyError, ValueError, ValidationError):
             logger.debug(f"class name: {self.__class__.__name__},request: {request.data}")
@@ -177,10 +177,10 @@ class UpdateDetail(APIView):
 
     def get(self, request):
         try:
-            return Response({"data": {"user_detail": UserAccountSerializer(request.user, many=False).data}},
+            return Response({"is_success": True, "data": {"user_detail": UserAccountSerializer(request.user, many=False).data}},
                             status=status.HTTP_200_OK)
         except CustomMessage as e:
-            return Response({"data": {"is_updated": False, "user_input": request.user.mobile, "message": e.message}},
+            return Response({"is_success": False, "data": {"user_input": request.user.mobile, "message": e.message}},
                             status=status.HTTP_200_OK)
         except (ParseError, ZeroDivisionError, MultiValueDictKeyError, KeyError, ValueError, ValidationError):
             logger.debug(f"class name: {self.__class__.__name__},request: {request.data}")

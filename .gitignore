@@ -1,3 +1,5 @@
 /account/migrations/
 /static_pages/migrations/
 /book_club/migrations/
+/book/migrations/
+/app_data/migrations/
